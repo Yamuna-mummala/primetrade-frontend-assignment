@@ -1,6 +1,6 @@
-import { useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function Login() {
   const navigate = useNavigate();
@@ -10,7 +10,17 @@ function Login() {
     password: "",
   });
 
+  const [message, setMessage] = useState("");
+
   const { email, password } = formData;
+
+  // 🔐 If already logged in, redirect to dashboard
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
 
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,16 +37,15 @@ function Login() {
         }
       );
 
-      // SUCCESS LOGIN
       if (res.data.token) {
-        // save token in browser
+        // Save token
         localStorage.setItem("token", res.data.token);
 
-        // go to dashboard
-        navigate("/dashboard");
+        // Redirect to dashboard (replace prevents going back)
+        navigate("/dashboard", { replace: true });
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
+      setMessage(err.response?.data?.message || "Login failed");
     }
   };
 
@@ -82,6 +91,10 @@ function Login() {
             Register
           </Link>
         </p>
+
+        {message && (
+          <p className="text-center text-red-400 mt-4">{message}</p>
+        )}
       </div>
     </div>
   );
